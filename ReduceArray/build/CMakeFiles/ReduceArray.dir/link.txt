@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/ReduceArray.dir/ReduceArray_generated_reduceArray.cu.o  -o ../bin/ReduceArray  /usr/local/cuda-11.5/targets/x86_64-linux/lib/libcudadevrt.a /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl /usr/lib/x86_64-linux-gnu/librt.so 

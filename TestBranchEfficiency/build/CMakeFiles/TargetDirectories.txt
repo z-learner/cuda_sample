@@ -1,0 +1,3 @@
+/home/friden/文档/CUDA_Code/TestBranchEfficiency/build/CMakeFiles/rebuild_cache.dir
+/home/friden/文档/CUDA_Code/TestBranchEfficiency/build/CMakeFiles/edit_cache.dir
+/home/friden/文档/CUDA_Code/TestBranchEfficiency/build/CMakeFiles/TestBranchEfficiency.dir
