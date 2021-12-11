@@ -30,11 +30,11 @@ double cpuSecond() {
 }
 
 template <typename T> 
-bool judgeMatrixBetweenCpuAndGpuResult(T* cpu_data, T* gpu_data, unsigned int nx, unsigned int ny) {
+bool judgeMatrixBetweenCpuAndGpuResult(T* cpu, T* gpu, unsigned int nx, unsigned int ny) {
    for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
             int index = i * ny + j;
-            if (cpu_data[index] != gpu_data[index]) return false;
+            if (abs(cpu[i] - gpu[i]) > 1.e-6) return false;
         }
     }
     return true;
@@ -43,7 +43,7 @@ bool judgeMatrixBetweenCpuAndGpuResult(T* cpu_data, T* gpu_data, unsigned int nx
 template <typename T>
 bool judgeArrayBetweenCpuAndGpuResult(T* cpu, T* gpu, unsigned int size) {
    for (int i = 0; i < size; ++i) {
-      if (cpu[i] != gpu[i]) return false;
+      if (abs(cpu[i] - gpu[i]) > 1.e-6) return false;
    }
    return true;
 }
@@ -57,7 +57,7 @@ void setDevice(int dev) {
 }
 
 
-void simpleDeviceQuery(int dev = 0) {
+cudaDeviceProp simpleDeviceQuery(int dev = 0) {
    cudaDeviceProp deviceProp;
    CUDACHECK(cudaGetDeviceProperties(&deviceProp, dev));
    printf("Using Device %d : %s\n", dev, deviceProp.name);
@@ -68,4 +68,5 @@ void simpleDeviceQuery(int dev = 0) {
    printf("Warp size %d\n", deviceProp.warpSize);
    printf("Maximum number of threads per block : %d\n", deviceProp.maxThreadsPerBlock);
    printf("Maximum number of threads per multiprocessor :%d\n", deviceProp.maxThreadsPerMultiProcessor);
-   printf("Maximum number of warps per multiprocessor : %d\n", deviceProp.maxThreadsPerMultiProcessor / 32); }
+   printf("Maximum number of warps per multiprocessor : %d\n", deviceProp.maxThreadsPerMultiProcessor / 32); 
+   return deviceProp;}

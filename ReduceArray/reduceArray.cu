@@ -1,7 +1,6 @@
 #include "../My_CUDA.hpp"
 #include <stdio.h>
 #include <iostream>
-#include <iostream>
 #include <time.h>
 
 #define blockSize 512
@@ -83,6 +82,9 @@ cudaError_t reduceKernelWithCuda(T* in_h, T* out, unsigned int size) {
     iElaps = cpuSecond() - iStart;
     printf("GPU Unwarp spend %f s in calculating\n", iElaps);
 
+    cudaFree(in_d);
+    cudaFree(out_d);
+    free(in_h);
     return status;
 
 }
@@ -176,6 +178,9 @@ cudaError_t reduceKernelUnwarpUroll8WithCuda(T* in_h, T* out, unsigned int size)
     iElaps = cpuSecond() - iStart;
     printf("GPU Unwarp Unroll8 spend %f s in calculating\n", iElaps);
 
+    cudaFree(in_d);
+    cudaFree(out_d);
+    free(in_h);
     return status;
 
 }
@@ -279,6 +284,9 @@ cudaError_t reduceKernelUnwarpUroll8WithCudaComplete(T* in_h, T* out, unsigned i
     iElaps = cpuSecond() - iStart;
     printf("GPU Unwarp Unroll8 spend %f s in calculating\n", iElaps);
 
+    cudaFree(in_d);
+    cudaFree(out_d);
+    free(in_h);
     return status;
 
 }
@@ -360,6 +368,9 @@ cudaError_t reduceRecuriveKernelWithCuda(T* in_h, T* out, unsigned int size) {
     iElaps = cpuSecond() - iStart;
     printf("GPU Recurive spend %f s in calculating\n", iElaps);
 
+    cudaFree(in_d);
+    cudaFree(out_d);
+    free(in_h);
     return status;
 
 }
@@ -419,6 +430,7 @@ int main(int argc, char* argv[]) {
 
     result_gpu == result_cpu ? printf("The result from gpu Recurive is same with cpu\n") : printf("The result from gpu Recurive isn't same with cpu\n");
 
+    free(in);
 
     return 0;
 
