@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/UnpageableMemTrans.dir/UnpageableMemTrans_generated_unpageableMemTransfer.cu.o  -o ../bin/UnpageableMemTrans  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 

@@ -1,0 +1,3 @@
+/home/friden/文档/CUDA_Code/SumArrayZeroCopy/build/CMakeFiles/rebuild_cache.dir
+/home/friden/文档/CUDA_Code/SumArrayZeroCopy/build/CMakeFiles/edit_cache.dir
+/home/friden/文档/CUDA_Code/SumArrayZeroCopy/build/CMakeFiles/UnpageableMemTrans.dir
