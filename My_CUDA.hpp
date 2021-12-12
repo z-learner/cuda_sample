@@ -57,6 +57,24 @@ void setDevice(int dev) {
 }
 
 
+void myPrintfFloat(float* in, unsigned int size) {
+   for (int i = 0; i < size; ++i) {
+      printf("%f ", in[i]);
+   }
+   printf("\n");
+}
+
+
+void myPrintfFloatGpu(float* in, unsigned int size) {
+   for (int i = 0; i < size; ++i) {
+      float temp = 0;
+      cudaMemcpy(&temp, &in[i], sizeof(float), cudaMemcpyDeviceToHost);
+      printf("%f ", temp);
+   }
+   printf("\n");
+}
+
+
 cudaDeviceProp simpleDeviceQuery(int dev = 0) {
    cudaDeviceProp deviceProp;
    CUDACHECK(cudaGetDeviceProperties(&deviceProp, dev));

@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/Transpose.dir/Transpose_generated_transposeMatrix.cu.o  -o ../bin/Transpose  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 
