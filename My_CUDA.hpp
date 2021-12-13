@@ -56,6 +56,13 @@ void setDevice(int dev) {
    CUDACHECK(cudaSetDevice(dev));
 }
 
+template<typename T>
+void initMem(T* ptr, unsigned int size) {
+   srand(time(NULL));
+   for (int i = 0; i < size; ++i) {
+      ptr[i] = rand() & 0XFF;
+   }
+}
 
 void myPrintfFloat(float* in, unsigned int size) {
    for (int i = 0; i < size; ++i) {

@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/Multiply.dir/Multiply_generated_multiplyMatrix.cu.o  -o ../bin/Multiply  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 

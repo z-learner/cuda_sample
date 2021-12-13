@@ -12,9 +12,12 @@ LIST(APPEND CUDA_NVCC_FLAGS -std=c++11;-O2)
 LIST(APPEND CUDA_NVCC_FLAGS -Xcompiler;-fPIC)
 
 
-INCLUDE_DIRECTORIES(${PATH_MY_HEADER})
+INCLUDE_DIRECTORIES(${PATH_MY_HEADER}
+    /usr/include
+)
 
 
 CUDA_ADD_EXECUTABLE(${PROJECT_NAME} 
-transposeMatrix.cu  
-)
+    # transpose.cu  
+    transposeMatrix.cu
+    )
