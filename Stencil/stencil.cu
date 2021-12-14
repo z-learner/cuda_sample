@@ -18,6 +18,7 @@ __global__ void stencilGlobalKernel(float* in, float* out,  int* para, unsigned 
     }
 }
 
+// Constant
 __global__ void stencilConstantKernel(float* in, float* out, unsigned int iSize, unsigned int oSize) {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx + 2 * RADIUS >= iSize && idx >= oSize) return;
@@ -25,7 +26,7 @@ __global__ void stencilConstantKernel(float* in, float* out, unsigned int iSize,
         out[idx] += coef[i] * in[idx + i];
     }
 }
-
+// SharedMem
 __global__ void stencilSharedMemKernel(float* in, float* out, int* para, unsigned int iSize, unsigned int oSize) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     __shared__ float sharedMem[SharedSize + 2 * RADIUS];
@@ -44,6 +45,7 @@ __global__ void stencilSharedMemKernel(float* in, float* out, int* para, unsigne
     }
 }
 
+// Constant SharedMem
 __global__ void stencilConstantSharedMemKernel(float* in, float* out, unsigned int iSize, unsigned int oSize) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     __shared__ float sharedMem[SharedSize + 2 * RADIUS];
@@ -60,6 +62,65 @@ __global__ void stencilConstantSharedMemKernel(float* in, float* out, unsigned i
     for (int i = 0; i < 2 * RADIUS + 1; ++i) {
         out[idx] += coef[i] * sharedMem[tid + i];
     }
+}
+
+// Constant SharedMem Unroll
+__global__ void stencilConstantSharedMemUnrollKernel(float* in, float* out, unsigned int iSize, unsigned int oSize) {
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ float sharedMem[SharedSize + 2 * RADIUS];
+
+    if (idx + 2 * RADIUS >= iSize && idx >= oSize) return;
+    unsigned int tid = threadIdx.x;
+    sharedMem[tid] = in[idx];
+    if (tid >= blockDim.x - 2 * RADIUS) {
+        sharedMem[tid + 2 * RADIUS] = in[idx + 2 * RADIUS]; 
+    }
+
+    __syncthreads();
+
+    // for (int i = 0; i < 2 * RADIUS + 1; ++i) {
+    //     out[idx] += coef[i] * sharedMem[tid + i];
+    // }
+    out[idx] += coef[0] * sharedMem[tid + 0];
+    out[idx] += coef[1] * sharedMem[tid + 1];
+    out[idx] += coef[2] * sharedMem[tid + 2];
+    out[idx] += coef[3] * sharedMem[tid + 3];
+    out[idx] += coef[4] * sharedMem[tid + 4];
+    out[idx] += coef[5] * sharedMem[tid + 5];
+    out[idx] += coef[6] * sharedMem[tid + 6];
+    out[idx] += coef[7] * sharedMem[tid + 7];
+    out[idx] += coef[8] * sharedMem[tid + 8];
+
+}
+
+
+// ReadOnly Cache Constant SharedMem Unroll
+__global__ void stencilConstantSharedMemUnrollReadOnlyKernel(const float* __restrict__ in, float* out, unsigned int iSize, unsigned int oSize) {
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ float sharedMem[SharedSize + 2 * RADIUS];
+
+    if (idx + 2 * RADIUS >= iSize && idx >= oSize) return;
+    unsigned int tid = threadIdx.x;
+    sharedMem[tid] = in[idx];
+    if (tid >= blockDim.x - 2 * RADIUS) {
+        sharedMem[tid + 2 * RADIUS] = in[idx + 2 * RADIUS]; 
+    }
+
+    __syncthreads();
+
+    // for (int i = 0; i < 2 * RADIUS + 1; ++i) {
+    //     out[idx] += coef[i] * sharedMem[tid + i];
+    // }
+    out[idx] += coef[0] * sharedMem[tid + 0];
+    out[idx] += coef[1] * sharedMem[tid + 1];
+    out[idx] += coef[2] * sharedMem[tid + 2];
+    out[idx] += coef[3] * sharedMem[tid + 3];
+    out[idx] += coef[4] * sharedMem[tid + 4];
+    out[idx] += coef[5] * sharedMem[tid + 5];
+    out[idx] += coef[6] * sharedMem[tid + 6];
+    out[idx] += coef[7] * sharedMem[tid + 7];
+    out[idx] += coef[8] * sharedMem[tid + 8];
+
 }
 
 cudaError_t testStencil(float* in_h, float* out_ref, int* para, unsigned int iSize, unsigned int oSize) {
@@ -146,6 +207,35 @@ cudaError_t testStencil(float* in_h, float* out_ref, int* para, unsigned int iSi
     CUDACHECK(status);
     judgeArrayBetweenCpuAndGpuResult(out_ref, out, oSize) ? printf("Same.\n") : printf("Isn't same.\n");
 
+    // Unroll Constant Shared Memory
+    status = cudaMemset(out_d, 0, oByte);
+    CUDACHECK(status);
+    iStart = cpuSecond();
+    stencilConstantSharedMemUnrollKernel<<< grid, block >>>(in_d, out_d, iSize, oSize);
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu shared memory Constant Unroll spend %fs in senciling.\n", iElaps);
+    status = cudaMemcpy(out, out_d, oByte, cudaMemcpyDeviceToHost);
+    CUDACHECK(status);
+    judgeArrayBetweenCpuAndGpuResult(out_ref, out, oSize) ? printf("Same.\n") : printf("Isn't same.\n");
+
+    // stencilConstantSharedMemUnrollReadOnlyKernel
+    status = cudaMemset(out_d, 0, oByte);
+    CUDACHECK(status);
+    iStart = cpuSecond();
+    stencilConstantSharedMemUnrollReadOnlyKernel<<< grid, block >>>(in_d, out_d, iSize, oSize);
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu shared memory Constant Unroll ReadOnly Cache spend %fs in senciling.\n", iElaps);
+    status = cudaMemcpy(out, out_d, oByte, cudaMemcpyDeviceToHost);
+    CUDACHECK(status);
+    judgeArrayBetweenCpuAndGpuResult(out_ref, out, oSize) ? printf("Same.\n") : printf("Isn't same.\n");
 
     free(out);
     cudaFree(out_d);
