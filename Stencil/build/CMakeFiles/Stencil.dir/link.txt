@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/Stencil.dir/Stencil_generated_stencil.cu.o  -o ../bin/Stencil  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 

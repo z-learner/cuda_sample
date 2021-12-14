@@ -126,6 +126,7 @@ __global__ void multiplyMatrixShareMemKernel(float* in1, float* in2, float* out,
 }
 
 
+// Shared Memory
 cudaError_t multiplyMatrixKernelSharedMemWithCuda(float* in1_h, float* in2_h, float* out_h, unsigned int nx1, unsigned int ny1, unsigned int nx2, unsigned int ny2) {
     // setDevice(0);
     cudaError_t status = cudaSuccess;
@@ -179,7 +180,178 @@ cudaError_t multiplyMatrixKernelSharedMemWithCuda(float* in1_h, float* in2_h, fl
     return status;
 }
 
+// NoBanking 1
 
+__global__ void multiplyMatrixShareMemNoBanking1Kernel(float* in1, float* in2, float* out, unsigned int nx1, unsigned int ny1, unsigned int nx2, unsigned int ny2) {
+    // unsigned int outSizeX = nx1;
+    unsigned int outSizeY = ny2;
+    unsigned int ix = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned int iy = blockDim.y * blockIdx.y + threadIdx.y;
+
+    unsigned int tidx = threadIdx.x;
+    unsigned int tidy = threadIdx.y;
+
+    __shared__ float sharedMem1[TILE_SIZE][TILE_SIZE + 1];
+    __shared__ float sharedMem2[TILE_SIZE][TILE_SIZE + 1];
+
+    float res = 0.0;
+    for (int i = 0; i < ny1 / TILE_SIZE; ++i) {
+
+        sharedMem1[tidx][tidy] = in1[ix * ny1 + i * TILE_SIZE + threadIdx.y];
+        sharedMem2[tidx][tidy] = in2[(i * TILE_SIZE + threadIdx.x) * ny2 + iy];
+
+        __syncthreads();
+
+        for (int j = 0; j < TILE_SIZE; ++j) {
+            res += sharedMem1[tidx][j] * sharedMem2[j][tidy];
+        } 
+        __syncthreads();
+
+        out[ix * outSizeY + iy] = res;
+    }
+    
+}
+
+
+cudaError_t multiplyMatrixKernelSharedMemNoBanking1WithCuda(float* in1_h, float* in2_h, float* out_h, unsigned int nx1, unsigned int ny1, unsigned int nx2, unsigned int ny2) {
+    // setDevice(0);
+    cudaError_t status = cudaSuccess;
+    float* in1_d;
+    unsigned int iSize1 = nx1 * ny1;
+    unsigned int iByte1 = iSize1 * sizeof(float);
+    float* in2_d;
+    unsigned int iSize2 = nx2 * ny2;
+    unsigned int iByte2 = iSize2 * sizeof(float);
+    float* out_d;    
+    unsigned int oSize = nx1 * ny2;
+    unsigned int oByte = oSize * sizeof(float);
+    double iStart, iElaps;
+    status = cudaMalloc((void**)&in1_d, iByte1);
+    CUDACHECK(status);
+    status = cudaMalloc((void**)&in2_d, iByte2);
+    CUDACHECK(status);
+    status = cudaMalloc((void**)&out_d, oByte);
+    CUDACHECK(status);
+
+    status = cudaMemcpy(in1_d, in1_h, iByte1, cudaMemcpyHostToDevice);
+    CUDACHECK(status);
+    status = cudaMemcpy(in2_d, in2_h, iByte2, cudaMemcpyHostToDevice);
+    CUDACHECK(status);
+
+    dim3 blockSize(TILE_SIZE, TILE_SIZE);
+    dim3 gridSize((nx1 + blockSize.x - 1) / blockSize.x, (ny2 + blockSize.y - 1) / blockSize.y);
+    iStart = cpuSecond();
+    multiplyMatrixShareMemNoBanking1Kernel<<< gridSize, blockSize >>>(in1_d, in2_d, out_d, nx1, ny1, nx2, ny2);
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu spend sharedMem NoBanking1 %fs in kernel function of multiplying matrix.\n", iElaps);
+
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+
+    status = cudaMemcpy(out_h, out_d, oByte, cudaMemcpyDeviceToHost);
+    CUDACHECK(status);
+
+
+
+    cudaFree(in1_d);
+    cudaFree(in2_d);
+    cudaFree(out_d);
+
+    return status;
+}
+
+
+// NoBanking 2
+
+__global__ void multiplyMatrixShareMemNoBanking2Kernel(float* in1, float* in2, float* out, unsigned int nx1, unsigned int ny1, unsigned int nx2, unsigned int ny2) {
+    // unsigned int outSizeX = nx1;
+    unsigned int outSizeY = ny2;
+    unsigned int ix = blockDim.x * blockIdx.x + threadIdx.x;
+    unsigned int iy = blockDim.y * blockIdx.y + threadIdx.y;
+
+    unsigned int tidx = threadIdx.x;
+    unsigned int tidy = threadIdx.y;
+
+    __shared__ float sharedMem1[TILE_SIZE][TILE_SIZE + 2];
+    __shared__ float sharedMem2[TILE_SIZE][TILE_SIZE + 2];
+
+    float res = 0.0;
+    for (int i = 0; i < ny1 / TILE_SIZE; ++i) {
+
+        sharedMem1[tidx][tidy] = in1[ix * ny1 + i * TILE_SIZE + threadIdx.y];
+        sharedMem2[tidx][tidy] = in2[(i * TILE_SIZE + threadIdx.x) * ny2 + iy];
+
+        __syncthreads();
+
+        for (int j = 0; j < TILE_SIZE; ++j) {
+            res += sharedMem1[tidx][j] * sharedMem2[j][tidy];
+        } 
+        __syncthreads();
+
+        out[ix * outSizeY + iy] = res;
+    }
+    
+}
+
+
+cudaError_t multiplyMatrixKernelSharedMemNoBanking2WithCuda(float* in1_h, float* in2_h, float* out_h, unsigned int nx1, unsigned int ny1, unsigned int nx2, unsigned int ny2) {
+    // setDevice(0);
+    cudaError_t status = cudaSuccess;
+    float* in1_d;
+    unsigned int iSize1 = nx1 * ny1;
+    unsigned int iByte1 = iSize1 * sizeof(float);
+    float* in2_d;
+    unsigned int iSize2 = nx2 * ny2;
+    unsigned int iByte2 = iSize2 * sizeof(float);
+    float* out_d;    
+    unsigned int oSize = nx1 * ny2;
+    unsigned int oByte = oSize * sizeof(float);
+    double iStart, iElaps;
+    status = cudaMalloc((void**)&in1_d, iByte1);
+    CUDACHECK(status);
+    status = cudaMalloc((void**)&in2_d, iByte2);
+    CUDACHECK(status);
+    status = cudaMalloc((void**)&out_d, oByte);
+    CUDACHECK(status);
+
+    status = cudaMemcpy(in1_d, in1_h, iByte1, cudaMemcpyHostToDevice);
+    CUDACHECK(status);
+    status = cudaMemcpy(in2_d, in2_h, iByte2, cudaMemcpyHostToDevice);
+    CUDACHECK(status);
+
+    dim3 blockSize(TILE_SIZE, TILE_SIZE);
+    dim3 gridSize((nx1 + blockSize.x - 1) / blockSize.x, (ny2 + blockSize.y - 1) / blockSize.y);
+    iStart = cpuSecond();
+    multiplyMatrixShareMemNoBanking2Kernel<<< gridSize, blockSize >>>(in1_d, in2_d, out_d, nx1, ny1, nx2, ny2);
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu spend sharedMem NoBanking2 %fs in kernel function of multiplying matrix.\n", iElaps);
+
+    status = cudaGetLastError();
+    CUDACHECK(status);
+    status = cudaDeviceSynchronize();
+    CUDACHECK(status);
+
+    status = cudaMemcpy(out_h, out_d, oByte, cudaMemcpyDeviceToHost);
+    CUDACHECK(status);
+
+
+
+    cudaFree(in1_d);
+    cudaFree(in2_d);
+    cudaFree(out_d);
+
+    return status;
+}
 
 
 int main(int argc, char** argv) {
@@ -231,6 +403,24 @@ int main(int argc, char** argv) {
     printf("gpu spend sharedMem totally spend %fs in multiplying matrix.\n", iElaps);
     // myPrintfFloat(out_gpu, 8);
     judgeArrayBetweenCpuAndGpuResult(out_cpu, out_gpu, oSize) ? printf("Same.\n") : printf("Isn't Same.\n");
+
+    memset(out_gpu, 0, oByte);
+    iStart = cpuSecond();
+    multiplyMatrixKernelSharedMemNoBanking1WithCuda(in1, in2, out_gpu, nx1, ny1, nx2, ny2);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu spend sharedMem NoBanking1 totally spend %fs in multiplying matrix.\n", iElaps);
+    // myPrintfFloat(out_gpu, 8);
+    judgeArrayBetweenCpuAndGpuResult(out_cpu, out_gpu, oSize) ? printf("Same.\n") : printf("Isn't Same.\n");
+
+
+    memset(out_gpu, 0, oByte);
+    iStart = cpuSecond();
+    multiplyMatrixKernelSharedMemNoBanking2WithCuda(in1, in2, out_gpu, nx1, ny1, nx2, ny2);
+    iElaps = cpuSecond() - iStart;
+    printf("gpu spend sharedMem NoBanking2 totally spend %fs in multiplying matrix.\n", iElaps);
+    // myPrintfFloat(out_gpu, 8);
+    judgeArrayBetweenCpuAndGpuResult(out_cpu, out_gpu, oSize) ? printf("Same.\n") : printf("Isn't Same.\n");
+
 
     free(in1);
     free(in2);
