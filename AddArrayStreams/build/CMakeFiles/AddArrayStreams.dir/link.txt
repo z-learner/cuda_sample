@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/AddArrayStreams.dir/AddArrayStreams_generated_addArrayStreams.cu.o  -o ../bin/AddArrayStreams  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 

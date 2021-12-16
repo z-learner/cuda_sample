@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/friden/文档/CUDA_Code'
+make: Leaving directory '/home/friden/文档/CUDA_Code'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+ 

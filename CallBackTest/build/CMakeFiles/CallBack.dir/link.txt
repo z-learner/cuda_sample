@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/CallBack.dir/CallBack_generated_mycallback.cu.o  -o ../bin/CallBack  /usr/local/cuda/lib64/libcudart_static.a -lpthread -ldl -lrt 

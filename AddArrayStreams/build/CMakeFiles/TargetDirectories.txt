@@ -1,0 +1,3 @@
+/home/friden/文档/CUDA_Code/AddArrayStreams/build/CMakeFiles/rebuild_cache.dir
+/home/friden/文档/CUDA_Code/AddArrayStreams/build/CMakeFiles/edit_cache.dir
+/home/friden/文档/CUDA_Code/AddArrayStreams/build/CMakeFiles/AddArrayStreams.dir
